@@ -480,15 +480,32 @@ function layout() {
   // never visually clip against the LCD bezel.
   const cellX = Math.floor(availW / (GRID_COLS + HALF_FOOD_PAD_CELLS * 2));
   const cellY = Math.floor(availH / (GRID_ROWS + HALF_FOOD_PAD_CELLS * 2));
-  const cell = Math.max(8, Math.floor(Math.min(cellX, cellY)));
 
-  const padX = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
-  const padY = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
-  const innerAvailW = Math.max(1, availW - padX * 2);
-  const innerAvailH = Math.max(1, availH - padY * 2);
+  // IMPORTANT: do not force a large minimum cell size.
+  // On small mobile screens, forcing (e.g.) 8px cells can make the board
+  // larger than the canvas, pushing the left/top rows off-canvas. That
+  // looks like the snake disappears for several steps after wrap-around.
+  let cell = Math.max(2, Math.floor(Math.min(cellX, cellY)));
 
-  const w = cell * GRID_COLS;
-  const h = cell * GRID_ROWS;
+  // Because padding is rounded to integer pixels, verify the grid still fits
+  // and shrink `cell` if needed.
+  let padX = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
+  let padY = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
+  let innerAvailW = Math.max(1, availW - padX * 2);
+  let innerAvailH = Math.max(1, availH - padY * 2);
+  let w = cell * GRID_COLS;
+  let h = cell * GRID_ROWS;
+
+  while ((w > innerAvailW || h > innerAvailH) && cell > 2) {
+    cell -= 1;
+    padX = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
+    padY = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
+    innerAvailW = Math.max(1, availW - padX * 2);
+    innerAvailH = Math.max(1, availH - padY * 2);
+    w = cell * GRID_COLS;
+    h = cell * GRID_ROWS;
+  }
+
   board = {
     cell,
     w,
