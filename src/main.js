@@ -476,35 +476,30 @@ function layout() {
   const availW = Math.max(1, screenCss.width - BOARD_MARGIN_PX * 2);
   const availH = Math.max(1, screenCss.height - BOARD_MARGIN_PX * 2);
 
-  // Account for extra padding (~0.35 cell on each side) so food/snake
-  // never visually clip against the LCD bezel.
-  const cellX = Math.floor(availW / (GRID_COLS + HALF_FOOD_PAD_CELLS * 2));
-  const cellY = Math.floor(availH / (GRID_ROWS + HALF_FOOD_PAD_CELLS * 2));
+  // Choose the largest possible `cell` so the playfield stays big on desktop
+  // while still guaranteeing the full grid fits on small mobile screens.
+  //
+  // Also inset by ~half the food size (0.35 cell) so edge food/snake never
+  // looks visually clipped by the Nokia LCD bezel/mask.
+  let cell = Math.max(2, Math.floor(Math.min(availW / GRID_COLS, availH / GRID_ROWS)));
 
-  // IMPORTANT: do not force a large minimum cell size.
-  // On small mobile screens, forcing (e.g.) 8px cells can make the board
-  // larger than the canvas, pushing the left/top rows off-canvas. That
-  // looks like the snake disappears for several steps after wrap-around.
-  let cell = Math.max(2, Math.floor(Math.min(cellX, cellY)));
-
-  // Because padding is rounded to integer pixels, verify the grid still fits
-  // and shrink `cell` if needed.
-  let padX = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
-  let padY = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
-  let innerAvailW = Math.max(1, availW - padX * 2);
-  let innerAvailH = Math.max(1, availH - padY * 2);
-  let w = cell * GRID_COLS;
-  let h = cell * GRID_ROWS;
-
-  while ((w > innerAvailW || h > innerAvailH) && cell > 2) {
-    cell -= 1;
-    padX = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
-    padY = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
-    innerAvailW = Math.max(1, availW - padX * 2);
-    innerAvailH = Math.max(1, availH - padY * 2);
+  let padX = 0;
+  let padY = 0;
+  let w = 1;
+  let h = 1;
+  while (true) {
+    padX = Math.max(0, Math.round(cell * HALF_FOOD_PAD_CELLS));
+    padY = Math.max(0, Math.round(cell * HALF_FOOD_PAD_CELLS));
     w = cell * GRID_COLS;
     h = cell * GRID_ROWS;
+
+    if (w + padX * 2 <= availW && h + padY * 2 <= availH) break;
+    if (cell <= 2) break;
+    cell -= 1;
   }
+
+  const innerAvailW = Math.max(1, availW - padX * 2);
+  const innerAvailH = Math.max(1, availH - padY * 2);
 
   board = {
     cell,
