@@ -10,9 +10,9 @@ import phoneUrl from "./assets/nokia3310.png";
 const DESIGN_SIZE = 1600;
 
 // Screen rectangle (game playable area) in DESIGN px
-const SCREEN_LEFT = 580;
+const SCREEN_LEFT = 560;
 const SCREEN_TOP = 308;
-const SCREEN_WIDTH = 450;
+const SCREEN_WIDTH = 490;
 const SCREEN_HEIGHT = 390;
 
 // Keep gameplay pixels slightly away from the screen edge so
