@@ -17,7 +17,7 @@ const SCREEN_HEIGHT = 390;
 
 // Keep gameplay pixels slightly away from the screen edge so
 // the Nokia bezel/mask doesn't visually clip edge food.
-const BOARD_MARGIN_PX = 6;
+const BOARD_MARGIN_PX = 14;
 
 // Keypad button rectangles in DESIGN px (tap targets)
 const KEY_SIZE = 150;
@@ -43,7 +43,7 @@ const COLOR_FOOD = "#D6FFD9";
 const COLOR_TEXT = "rgba(214,255,217,0.95)";
 const COLOR_OVERLAY = "rgba(0,0,0,0.65)";
 
-// Food is drawn at 0.7x cell size; pad horizontally by half-food (0.35 cell)
+// Food is drawn at 0.7x cell size; pad by half-food (0.35 cell)
 // so edge food never gets visually clipped by the Nokia screen mask.
 const FOOD_DRAW_SCALE = 0.7;
 const HALF_FOOD_PAD_CELLS = FOOD_DRAW_SCALE / 2;
@@ -476,13 +476,16 @@ function layout() {
   const availW = Math.max(1, screenCss.width - BOARD_MARGIN_PX * 2);
   const availH = Math.max(1, screenCss.height - BOARD_MARGIN_PX * 2);
 
-  // Account for extra horizontal padding (~0.35 cell on each side).
+  // Account for extra padding (~0.35 cell on each side) so food/snake
+  // never visually clip against the LCD bezel.
   const cellX = Math.floor(availW / (GRID_COLS + HALF_FOOD_PAD_CELLS * 2));
-  const cellY = Math.floor(availH / GRID_ROWS);
+  const cellY = Math.floor(availH / (GRID_ROWS + HALF_FOOD_PAD_CELLS * 2));
   const cell = Math.max(8, Math.floor(Math.min(cellX, cellY)));
 
   const padX = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
+  const padY = Math.max(0, Math.ceil(cell * HALF_FOOD_PAD_CELLS));
   const innerAvailW = Math.max(1, availW - padX * 2);
+  const innerAvailH = Math.max(1, availH - padY * 2);
 
   const w = cell * GRID_COLS;
   const h = cell * GRID_ROWS;
@@ -491,7 +494,7 @@ function layout() {
     w,
     h,
     offX: BOARD_MARGIN_PX + padX + Math.floor((innerAvailW - w) / 2),
-    offY: BOARD_MARGIN_PX + Math.floor((availH - h) / 2),
+    offY: BOARD_MARGIN_PX + padY + Math.floor((innerAvailH - h) / 2),
   };
 
   // Restart button positioned below the screen
