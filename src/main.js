@@ -530,7 +530,14 @@ function frame(ms) {
 
   if (gameState === "playing") {
     const step = stepMsForScore(score);
-    while (accMs >= step) {
+    // On mobile, long frames (GC, UI chrome resize) can build up a large
+    // accMs. Catching up with a `while` makes the snake jump multiple cells
+    // in one draw, which looks like it vanishes at edges then reappears
+    // several pixels later after wrap-around.
+    //
+    // Limit to at most 1 tick per frame and drop excess backlog.
+    if (accMs >= step) {
+      accMs = Math.min(accMs, step);
       accMs -= step;
       tick();
     }
