@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Red Pepe Snake</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="stage">
+        <div class="row">
+          <div class="phone" id="phone">
+            <img id="phoneImg" class="phone__img" alt="Nokia-style phone" />
+
+            <!-- Screen canvas is positioned by JS using SCREEN_* constants -->
+            <canvas id="screenCanvas" class="screen" aria-label="Snake game screen"></canvas>
+
+            <!-- Keypad controls (transparent tap targets, positioned by JS) -->
+            <button class="key key--2" id="key2" type="button" aria-label="Up (2)">2</button>
+            <button class="key key--4" id="key4" type="button" aria-label="Left (4)">4</button>
+            <button class="key key--6" id="key6" type="button" aria-label="Right (6)">6</button>
+            <button class="key key--star" id="keyStar" type="button" aria-label="Pause (*)">*</button>
+            <button class="key key--8" id="key8" type="button" aria-label="Down (8)">8</button>
+
+            <!-- Restart button sits below the screen; only shown on game over -->
+            <button class="restart hidden" id="restartBtn" type="button">Restart</button>
+          </div>
+
+          <div class="hud" aria-label="Scoreboard">
+            <div class="hud__title">Red Pepe Snake</div>
+            <div class="hud__line"><span>Score</span><span id="hudScore">0</span></div>
+            <div class="hud__line"><span>Best</span><span id="hudBest">0</span></div>
+            <div class="hud__line"><span>Attempts today</span><span id="hudAttempts">0</span></div>
+          </div>
+        </div>
+
+        <div class="hint">Arrow keys to move • Tap 2/4/6/8 on the keypad • P or * to pause</div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
