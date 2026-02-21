@@ -10,10 +10,12 @@ import phoneUrl from "./assets/nokia3310.png";
 const DESIGN_SIZE = 1600;
 
 // Screen rectangle (game playable area) in DESIGN px
-const SCREEN_LEFT = 560;
-const SCREEN_TOP = 308;
-const SCREEN_WIDTH = 490;
-const SCREEN_HEIGHT = 390;
+// Chosen to fit inside the Nokia "glass" panel while keeping a 20x16 aspect
+// so the snake grid fills the playable area (avoids big vertical gutters).
+const SCREEN_LEFT = 540;
+const SCREEN_TOP = 350;
+const SCREEN_WIDTH = 519;
+const SCREEN_HEIGHT = 415;
 
 // Keep gameplay pixels slightly away from the screen edge so
 // the Nokia bezel/mask doesn't visually clip edge food.
@@ -22,9 +24,13 @@ const BOARD_MARGIN_PX = 14;
 // Keypad button rectangles in DESIGN px (tap targets)
 const KEY_SIZE = 150;
 const KEY_WIDE = 195;
+const KEY_ENTER_W = 220;
+const KEY_ENTER_H = 110;
 const KEYS = {
   // Nudged down a bit for better alignment.
   "2": { cx: 800, cy: 1135, w: KEY_SIZE, h: KEY_SIZE },
+  // Center select/enter button (above "2")
+  ENT: { cx: 800, cy: 855, w: KEY_ENTER_W, h: KEY_ENTER_H },
   // D-pad outward + a touch higher
   "4": { cx: 610, cy: 1225, w: KEY_WIDE, h: KEY_SIZE },
   "6": { cx: 990, cy: 1225, w: KEY_WIDE, h: KEY_SIZE },
@@ -58,6 +64,7 @@ const hudBest = document.getElementById("hudBest");
 const hudAttempts = document.getElementById("hudAttempts");
 
 const key2 = document.getElementById("key2");
+const keyEnt = document.getElementById("keyEnt");
 const key4 = document.getElementById("key4");
 const key6 = document.getElementById("key6");
 const keyStar = document.getElementById("keyStar");
@@ -86,6 +93,16 @@ let food = { x: 0, y: 0 };
 
 let lastMs = 0;
 let accMs = 0;
+
+function isCoarsePointerNow() {
+  try {
+    return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  } catch {
+    return false;
+  }
+}
+
+let showKeypad = isCoarsePointerNow();
 
 const STATS_KEY = "redpepe.snake.stats.v1";
 
@@ -229,6 +246,24 @@ function togglePause() {
   else if (gameState === "paused") resumeGame();
 }
 
+function pressEnter() {
+  if (uiScreen === "menu") {
+    selectMenuItem(menuIndex);
+    return;
+  }
+  if (uiScreen === "instructions") {
+    uiScreen = "menu";
+    return;
+  }
+  if (gameState === "paused") {
+    resumeGame();
+    return;
+  }
+  if (gameState === "idle" || gameState === "over") {
+    startNewGame();
+  }
+}
+
 function selectMenuItem(index) {
   // 0: Instructions, 1: Continue, 2: New game
   if (index === 0) {
@@ -300,7 +335,7 @@ function draw() {
   // Snake
   ctx.fillStyle = COLOR_SNAKE;
   for (let i = 0; i < snake.length; i++) {
-    drawCell(snake[i].x, snake[i].y, i === 0 ? 0.95 : 0.85);
+    drawCell(snake[i].x, snake[i].y, 1.0, i === 0 ? 1 : 0);
   }
 
   // Optional UI: speed indicator (small, top-right)
@@ -433,7 +468,7 @@ function drawInstructions() {
     "- P or * to pause",
     "- Eat food to score",
     "- Don't hit yourself",
-    "- Press Enter to go back",
+    showKeypad ? "- Tap ENT to go back" : "- Press Enter to go back",
   ];
   const lineHeight = Math.max(12, Math.round(15 * fs));
   const maxW = Math.max(1, screenCss.width - 32);
@@ -443,18 +478,24 @@ function drawInstructions() {
   }
 }
 
-function drawCell(cx, cy, scale = 1) {
+function drawCell(cx, cy, scale = 1, expandPx = 0) {
   const s = board.cell;
   const x = board.offX + cx * s;
   const y = board.offY + cy * s;
   const pad = Math.floor(((1 - scale) * s) / 2);
-  ctx.fillRect(x + pad, y + pad, s - pad * 2, s - pad * 2);
+  const x0 = clamp(x + pad - expandPx, 0, screenCss.width);
+  const y0 = clamp(y + pad - expandPx, 0, screenCss.height);
+  const x1 = clamp(x + s - pad + expandPx, 0, screenCss.width);
+  const y1 = clamp(y + s - pad + expandPx, 0, screenCss.height);
+  ctx.fillRect(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
 }
 
 function layout() {
   dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
   const imgW = phoneImg.clientWidth;
   const scale = imgW / DESIGN_SIZE;
+
+  showKeypad = isCoarsePointerNow();
 
   screenCss = {
     left: Math.round(SCREEN_LEFT * scale),
@@ -514,6 +555,12 @@ function layout() {
   restartBtn.style.top = `${screenCss.top + screenCss.height + Math.round(22 * scale)}px`;
 
   // Keypad keys
+  const keypadEls = [keyEnt, key2, key4, key6, keyStar, key8].filter(Boolean);
+  keypadEls.forEach((el) => el.classList.toggle("hidden", !showKeypad));
+  if (!showKeypad) return;
+
+  if (!keyEnt || !key2 || !key4 || !key6 || !keyStar || !key8) return;
+
   const placeKey = (el, k) => {
     const w = Math.round((k.w ?? KEY_SIZE) * scale);
     const h = Math.round((k.h ?? KEY_SIZE) * scale);
@@ -527,6 +574,7 @@ function layout() {
     el.style.fontSize = `${Math.max(14, Math.round(Math.min(w, h) * 0.22))}px`;
   };
 
+  placeKey(keyEnt, KEYS.ENT);
   placeKey(key2, KEYS["2"]);
   placeKey(key4, KEYS["4"]);
   placeKey(key6, KEYS["6"]);
@@ -605,6 +653,10 @@ function bindInputs() {
   );
 
   const press = (x, y) => () => setDirection(x, y);
+
+  if (keyEnt) {
+    keyEnt.addEventListener("pointerdown", () => pressEnter());
+  }
   key2.addEventListener("pointerdown", () => {
     if (gameState === "playing") press(0, -1)();
   });
