@@ -335,7 +335,9 @@ function draw() {
   // Snake
   ctx.fillStyle = COLOR_SNAKE;
   for (let i = 0; i < snake.length; i++) {
-    drawCell(snake[i].x, snake[i].y, 1.0, i === 0 ? 1 : 0);
+    // Pixelated: render slightly smaller squares so segments are visibly separated.
+    // Head is a tiny bit bigger (still leaves a gap).
+    drawCell(snake[i].x, snake[i].y, i === 0 ? 0.92 : 0.86, 0);
   }
 
   // Optional UI: speed indicator (small, top-right)
