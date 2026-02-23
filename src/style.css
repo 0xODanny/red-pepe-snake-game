@@ -126,6 +126,82 @@ body {
   filter: brightness(0.92);
 }
 
+.recordModal {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.recordModal__card {
+  width: min(92%, 340px);
+  border-radius: 14px;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  background: rgba(0, 0, 0, 0.75);
+  padding: 14px;
+  text-align: center;
+}
+
+.recordModal__title {
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: rgba(214, 255, 217, 0.95);
+  margin-bottom: 10px;
+}
+
+.recordModal__text {
+  font-size: 13px;
+  opacity: 0.92;
+}
+
+.recordModal__points {
+  margin: 8px 0;
+  font-weight: 900;
+  font-size: 18px;
+  color: rgba(214, 255, 217, 0.95);
+}
+
+.recordModal__actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.recordModal__btn {
+  min-width: 100px;
+  height: 38px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.recordModal__btn--ribbit {
+  border: 0;
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.recordModal__btn--no {
+  background: rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(34, 197, 94, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.recordModal__btn:active {
+  filter: brightness(0.92);
+}
+
 .hidden {
   display: none;
 }

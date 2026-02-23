@@ -59,6 +59,11 @@ const phone = document.getElementById("phone");
 const canvas = document.getElementById("screenCanvas");
 const restartBtn = document.getElementById("restartBtn");
 
+const recordModal = document.getElementById("recordModal");
+const recordPoints = document.getElementById("recordPoints");
+const recordRibbitBtn = document.getElementById("recordRibbitBtn");
+const recordNoBtn = document.getElementById("recordNoBtn");
+
 const hudScore = document.getElementById("hudScore");
 const hudBest = document.getElementById("hudBest");
 const hudAttempts = document.getElementById("hudAttempts");
@@ -80,6 +85,9 @@ let board = { cell: 1, offX: 0, offY: 0, w: 1, h: 1 };
 
 let score = 0;
 let gameOver = false;
+
+let recordModalOpen = false;
+let bestScoreAtGameStart = 0;
 
 let gameState = "idle"; // idle | playing | paused | over
 let uiScreen = "menu"; // menu | instructions | none
@@ -137,6 +145,29 @@ function saveStats(stats) {
 }
 
 let stats = loadStats();
+bestScoreAtGameStart = stats.bestScore ?? 0;
+
+function hideRecordModal() {
+  if (!recordModal) return;
+  recordModal.classList.add("hidden");
+  recordModalOpen = false;
+}
+
+function showRecordModal(points) {
+  if (!recordModal) return;
+  if (recordPoints) recordPoints.textContent = String(points);
+  restartBtn.classList.add("hidden");
+  recordModal.classList.remove("hidden");
+  recordModalOpen = true;
+}
+
+function goToMainMenu() {
+  hideRecordModal();
+  resetGame();
+  gameState = "idle";
+  uiScreen = "menu";
+  menuIndex = 2;
+}
 
 function updateHud() {
   if (hudScore) hudScore.textContent = String(score);
@@ -222,6 +253,8 @@ function maybeUpdateBest() {
 }
 
 function startNewGame() {
+  hideRecordModal();
+  bestScoreAtGameStart = stats.bestScore ?? 0;
   resetGame();
   recordAttemptStart();
   gameState = "playing";
@@ -303,7 +336,11 @@ function tick() {
     if (isSameCell(nextSnake[i], next)) {
       gameOver = true;
       gameState = "over";
-      restartBtn.classList.remove("hidden");
+      if (score > bestScoreAtGameStart) {
+        showRecordModal(score);
+      } else {
+        restartBtn.classList.remove("hidden");
+      }
       return;
     }
   }
@@ -511,6 +548,13 @@ function layout() {
   canvas.style.top = `${screenCss.top}px`;
   canvas.style.width = `${screenCss.width}px`;
   canvas.style.height = `${screenCss.height}px`;
+
+  if (recordModal) {
+    recordModal.style.left = `${screenCss.left}px`;
+    recordModal.style.top = `${screenCss.top}px`;
+    recordModal.style.width = `${screenCss.width}px`;
+    recordModal.style.height = `${screenCss.height}px`;
+  }
   canvas.width = Math.max(1, Math.floor(screenCss.width * dpr));
   canvas.height = Math.max(1, Math.floor(screenCss.height * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -613,6 +657,10 @@ function bindInputs() {
   window.addEventListener(
     "keydown",
     (e) => {
+      if (recordModalOpen) {
+        e.preventDefault();
+        return;
+      }
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
 
       // Global
@@ -657,26 +705,51 @@ function bindInputs() {
   const press = (x, y) => () => setDirection(x, y);
 
   if (keyEnt) {
-    keyEnt.addEventListener("pointerdown", () => pressEnter());
+    keyEnt.addEventListener("pointerdown", () => {
+      if (recordModalOpen) return;
+      pressEnter();
+    });
   }
   key2.addEventListener("pointerdown", () => {
+    if (recordModalOpen) return;
     if (gameState === "playing") press(0, -1)();
   });
   key4.addEventListener("pointerdown", () => {
+    if (recordModalOpen) return;
     if (gameState === "playing") press(-1, 0)();
   });
   key6.addEventListener("pointerdown", () => {
+    if (recordModalOpen) return;
     if (gameState === "playing") press(1, 0)();
   });
   key8.addEventListener("pointerdown", () => {
+    if (recordModalOpen) return;
     if (gameState === "playing") press(0, 1)();
   });
 
   keyStar.addEventListener("pointerdown", () => {
+    if (recordModalOpen) return;
     togglePause();
   });
 
-  restartBtn.addEventListener("pointerdown", () => startNewGame());
+  restartBtn.addEventListener("pointerdown", () => {
+    if (recordModalOpen) return;
+    startNewGame();
+  });
+
+  if (recordRibbitBtn) {
+    recordRibbitBtn.addEventListener("pointerdown", () => {
+      if (!recordModalOpen) return;
+      startNewGame();
+    });
+  }
+
+  if (recordNoBtn) {
+    recordNoBtn.addEventListener("pointerdown", () => {
+      if (!recordModalOpen) return;
+      goToMainMenu();
+    });
+  }
 
   // Menu click support
   canvas.addEventListener("pointerdown", (e) => {
